@@ -1,0 +1,22 @@
+---
+repositories:
+ - name: kafka
+   url: registry-1.docker.io/bitnamicharts
+   oci: true
+
+---
+environments:
+  dev:
+    values:
+      - envs/dev/values.yaml
+  prod:
+    values:
+      - envs/prod/values.yaml
+---
+releases:
+  - name: kafka
+    chart: kafka/kafka
+    version: 32.1.2
+    namespace: '{{ .Values.namespaceOverride }}'
+    values:
+    - envs/{{ .Environment.Name }}/values.yaml
