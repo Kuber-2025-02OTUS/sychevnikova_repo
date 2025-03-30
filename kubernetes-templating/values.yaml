@@ -1,0 +1,76 @@
+---
+replicaCount: 3
+image:
+  repository: nginx
+  pullPolicy: IfNotPresent
+  tag: latest
+service:
+  type: ClusterIP
+  port: 8000
+namespace: homework
+configmap:
+  name: cm-webserver
+volumes:
+  - name: workdir
+    persistentVolumeClaim:
+      claimName: pvc-webserver
+  - name: cm-webserver
+    configMap:
+      name: cm-webserver
+volumeMounts:
+  - name: workdir
+    mountPath: /homework
+  - name: cm-webserver
+    mountPath: /etc/nginx/conf.d/webserver_8000.conf
+    subPath: webserver_8000.conf
+  - name: cm-webserver
+    mountPath: /homework/conf/file
+    subPath: file
+readinessProbe:
+    httpGet:
+      path: /index.html
+      port: 8000
+    initialDelaySeconds: 3
+    periodSeconds: 3
+nodeSelector: 
+  homework: "true"
+lifecycle:
+  preStop:
+    exec:
+      command: ["/bin/sh","-c","rm -f /homework/index.html"]
+initContainers:
+  - name: init
+    image: busybox:1.28
+    command: ["/bin/sh"]
+    args: ["-c","echo 'hello world' > /init/index.html"]
+    volumeMounts:
+    - name: workdir
+      mountPath: "/init"
+strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxUnavailable: 1
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /index.html
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: homework.otus
+      paths:
+        - path: /homepage
+          pathType: Prefix
+          backend:
+            service:
+              name: webserver-service
+              port:
+                number: 8000
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: webserver-service
+              port:
+                number: 8000

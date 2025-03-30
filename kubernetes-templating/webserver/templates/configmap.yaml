@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.configmap.name }}
+  labels:
+    {{- include "webserver.labels" . | nindent 4 }}
+  {{- if .Values.namespace }}
+  namespace: {{ .Values.namespace }}
+  {{- end }}
+data:
+  webserver_8000.conf: |
+    server {
+    listen       8000;
+    server_name  localhost;
+    location / {
+        root   /homework;
+        index  index.html index.htm;
+    }
+    }
+  file: |
+    test_value_1=1
+    test_value_2=2
