@@ -1,0 +1,23 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: mon-nginx
+  labels:
+    app.kubernetes.io/instance: nginx
+    app.kubernetes.io/name: nginx
+    release: prom-stack
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: nginx
+      app.kubernetes.io/name: nginx
+  namespaceSelector:
+    # matchNames:
+    # - default
+    matchNames:
+    - homework
+  endpoints:
+  - port: nginx
+    path: /metrics
+    interval: 15s

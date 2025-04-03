@@ -1,0 +1,229 @@
+[root@otus kubernetes-monitoring]# helm install prom-stack prometheus-community/kube-prometheus-stack
+NAME: prom-stack
+LAST DEPLOYED: Sun Mar 30 07:30:01 2025
+NAMESPACE: default
+STATUS: deployed
+REVISION: 1
+NOTES:
+kube-prometheus-stack has been installed. Check its status by running:
+  kubectl --namespace default get pods -l "release=prom-stack"
+
+Get Grafana 'admin' user password by running:
+
+  kubectl --namespace default get secrets prom-stack-grafana -o jsonpath="{.data.admin-password}" | base64 -d ; echo
+
+Access Grafana local instance:
+
+  export POD_NAME=$(kubectl --namespace default get pod -l "app.kubernetes.io/name=grafana,app.kubernetes.io/instance=prom-stack" -oname)
+  kubectl --namespace default port-forward $POD_NAME 3000
+
+Visit https://github.com/prometheus-operator/kube-prometheus for instructions on how to create & configure Alertmanager and Prometheus instances using the Operator.
+
+
+[root@otus kubernetes-monitoring]# kubectl apply -f configmap.yaml -f deployment.yaml -f service.yaml -f servicemonitor.yaml
+configmap/nginx-config configured
+deployment.apps/nginx configured
+service/nginx configured
+servicemonitor.monitoring.coreos.com/mon-nginx configured
+
+
+[root@otus ~]# kubectl get -A svc
+NAMESPACE       NAME                                                 TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)                        AGE
+default         alertmanager-operated                                ClusterIP   None             <none>        9093/TCP,9094/TCP,9094/UDP     27h
+default         kubernetes                                           ClusterIP   10.96.0.1        <none>        443/TCP                        27h
+default         prom-stack-grafana                                   ClusterIP   10.106.200.246   <none>        80/TCP                         27h
+default         prom-stack-kube-prometheus-alertmanager              ClusterIP   10.111.21.31     <none>        9093/TCP,8080/TCP              27h
+default         prom-stack-kube-prometheus-operator                  ClusterIP   10.99.35.175     <none>        443/TCP                        27h
+default         prom-stack-kube-prometheus-prometheus                ClusterIP   10.109.121.35    <none>        9090/TCP,8080/TCP              27h
+default         prom-stack-kube-state-metrics                        ClusterIP   10.107.55.223    <none>        8080/TCP                       27h
+default         prom-stack-prometheus-node-exporter                  ClusterIP   10.110.235.80    <none>        9100/TCP                       27h
+default         prometheus-operated                                  ClusterIP   None             <none>        9090/TCP                       27h
+homework        nginx                                                ClusterIP   10.100.197.72    <none>        9113/TCP                       23m
+ingress-nginx   ingress-nginx-controller                             NodePort    10.103.5.70      <none>        80:31077/TCP,443:30130/TCP     27h
+ingress-nginx   ingress-nginx-controller-admission                   ClusterIP   10.96.142.36     <none>        443/TCP                        27h
+kube-system     kube-dns                                             ClusterIP   10.96.0.10       <none>        53/UDP,53/TCP,9153/TCP         27h
+kube-system     prom-stack-kube-prometheus-coredns                   ClusterIP   None             <none>        9153/TCP                       27h
+kube-system     prom-stack-kube-prometheus-kube-controller-manager   ClusterIP   None             <none>        10257/TCP                      27h
+kube-system     prom-stack-kube-prometheus-kube-etcd                 ClusterIP   None             <none>        2381/TCP                       27h
+kube-system     prom-stack-kube-prometheus-kube-proxy                ClusterIP   None             <none>        10249/TCP                      27h
+kube-system     prom-stack-kube-prometheus-kube-scheduler            ClusterIP   None             <none>        10259/TCP                      27h
+kube-system     prom-stack-kube-prometheus-kubelet                   ClusterIP   None             <none>        10250/TCP,10255/TCP,4194/TCP   27h
+[root@otus ~]# kubectl get -A endpoints
+NAMESPACE       NAME                                                 ENDPOINTS                                                 AGE
+default         alertmanager-operated                                10.244.0.36:9094,10.244.0.36:9094,10.244.0.36:9093        27h
+default         kubernetes                                           192.168.49.2:8443                                         27h
+default         prom-stack-grafana                                   10.244.0.37:3000                                          27h
+default         prom-stack-kube-prometheus-alertmanager              10.244.0.36:8080,10.244.0.36:9093                         27h
+default         prom-stack-kube-prometheus-operator                  10.244.0.34:10250                                         27h
+default         prom-stack-kube-prometheus-prometheus                10.244.0.38:9090,10.244.0.38:8080                         27h
+default         prom-stack-kube-state-metrics                        10.244.0.31:8080                                          27h
+default         prom-stack-prometheus-node-exporter                  192.168.49.2:9100                                         27h
+default         prometheus-operated                                  10.244.0.38:9090                                          27h
+homework        nginx                                                10.244.0.41:9113                                          23m
+ingress-nginx   ingress-nginx-controller                             10.244.0.33:443,10.244.0.33:80                            27h
+ingress-nginx   ingress-nginx-controller-admission                   10.244.0.33:8443                                          27h
+kube-system     k8s.io-minikube-hostpath                             <none>                                                    27h
+kube-system     kube-dns                                             10.244.0.32:53,10.244.0.32:53,10.244.0.32:9153            27h
+kube-system     prom-stack-kube-prometheus-coredns                   10.244.0.32:9153                                          27h
+kube-system     prom-stack-kube-prometheus-kube-controller-manager   192.168.49.2:10257                                        27h
+kube-system     prom-stack-kube-prometheus-kube-etcd                 192.168.49.2:2381                                         27h
+kube-system     prom-stack-kube-prometheus-kube-proxy                192.168.49.2:10249                                        27h
+kube-system     prom-stack-kube-prometheus-kube-scheduler            192.168.49.2:10259                                        27h
+kube-system     prom-stack-kube-prometheus-kubelet                   192.168.49.2:10250,192.168.49.2:10255,192.168.49.2:4194   27h
+
+curl -XGET 10.100.197.72:9113/metrics
+# HELP go_gc_duration_seconds A summary of the wall-time pause (stop-the-world) duration in garbage collection cycles.
+# TYPE go_gc_duration_seconds summary
+go_gc_duration_seconds{quantile="0"} 2.7179e-05
+go_gc_duration_seconds{quantile="0.25"} 5.6378e-05
+go_gc_duration_seconds{quantile="0.5"} 0.00025018
+go_gc_duration_seconds{quantile="0.75"} 0.000356134
+go_gc_duration_seconds{quantile="1"} 0.002398648
+go_gc_duration_seconds_sum 0.008052904
+go_gc_duration_seconds_count 22
+# HELP go_gc_gogc_percent Heap size target percentage configured by the user, otherwise 100. This value is set by the GOGC environment variable, and the runtime/debug.SetGCPercent function. Sourced from /gc/gogc:percent
+# TYPE go_gc_gogc_percent gauge
+go_gc_gogc_percent 100
+# HELP go_gc_gomemlimit_bytes Go runtime memory limit configured by the user, otherwise math.MaxInt64. This value is set by the GOMEMLIMIT environment variable, and the runtime/debug.SetMemoryLimit function. Sourced from /gc/gomemlimit:bytes   
+# TYPE go_gc_gomemlimit_bytes gauge
+go_gc_gomemlimit_bytes 9.223372036854776e+18
+# HELP go_goroutines Number of goroutines that currently exist.
+# TYPE go_goroutines gauge
+go_goroutines 13
+# HELP go_info Information about the Go environment.
+# TYPE go_info gauge
+go_info{version="go1.23.3"} 1
+# HELP go_memstats_alloc_bytes Number of bytes allocated in heap and currently in use. Equals to /memory/classes/heap/objects:bytes.
+# TYPE go_memstats_alloc_bytes gauge
+go_memstats_alloc_bytes 3.91336e+06
+# HELP go_memstats_alloc_bytes_total Total number of bytes allocated in heap until now, even if released already. Equals to /gc/heap/allocs:bytes.
+# TYPE go_memstats_alloc_bytes_total counter
+go_memstats_alloc_bytes_total 3.9524712e+07
+# HELP go_memstats_buck_hash_sys_bytes Number of bytes used by the profiling bucket hash table. Equals to /memory/classes/profiling/buckets:bytes.
+# TYPE go_memstats_buck_hash_sys_bytes gauge
+go_memstats_buck_hash_sys_bytes 4223
+# HELP go_memstats_frees_total Total number of heap objects frees. Equals to /gc/heap/frees:objects + /gc/heap/tiny/allocs:objects.
+# TYPE go_memstats_frees_total counter
+go_memstats_frees_total 91024
+# HELP go_memstats_gc_sys_bytes Number of bytes used for garbage collection system metadata. Equals to /memory/classes/metadata/other:bytes.
+# TYPE go_memstats_gc_sys_bytes gauge
+go_memstats_gc_sys_bytes 2.84468e+06
+# HELP go_memstats_heap_alloc_bytes Number of heap bytes allocated and currently in use, same as go_memstats_alloc_bytes. Equals to /memory/classes/heap/objects:bytes.
+# TYPE go_memstats_heap_alloc_bytes gauge
+go_memstats_heap_alloc_bytes 3.91336e+06
+# HELP go_memstats_heap_idle_bytes Number of heap bytes waiting to be used. Equals to /memory/classes/heap/released:bytes + /memory/classes/heap/free:bytes.
+# TYPE go_memstats_heap_idle_bytes gauge
+go_memstats_heap_idle_bytes 6.06208e+06
+# HELP go_memstats_heap_inuse_bytes Number of heap bytes that are in use. Equals to /memory/classes/heap/objects:bytes + /memory/classes/heap/unused:bytes
+# TYPE go_memstats_heap_inuse_bytes gauge
+go_memstats_heap_inuse_bytes 5.636096e+06
+# HELP go_memstats_heap_objects Number of currently allocated objects. Equals to /gc/heap/objects:objects.
+# TYPE go_memstats_heap_objects gauge
+go_memstats_heap_objects 2377
+# HELP go_memstats_heap_released_bytes Number of heap bytes released to OS. Equals to /memory/classes/heap/released:bytes.
+# TYPE go_memstats_heap_released_bytes gauge
+go_memstats_heap_released_bytes 4.54656e+06
+# HELP go_memstats_heap_sys_bytes Number of heap bytes obtained from system. Equals to /memory/classes/heap/objects:bytes + /memory/classes/heap/unused:bytes + /memory/classes/heap/released:bytes + /memory/classes/heap/free:bytes.
+# TYPE go_memstats_heap_sys_bytes gauge
+go_memstats_heap_sys_bytes 1.1698176e+07
+# HELP go_memstats_last_gc_time_seconds Number of seconds since 1970 of last garbage collection.
+# TYPE go_memstats_last_gc_time_seconds gauge
+go_memstats_last_gc_time_seconds 1.743714158114475e+09
+# HELP go_memstats_mallocs_total Total number of heap objects allocated, both live and gc-ed. Semantically a counter version for go_memstats_heap_objects gauge. Equals to /gc/heap/allocs:objects + /gc/heap/tiny/allocs:objects.
+# TYPE go_memstats_mallocs_total counter
+go_memstats_mallocs_total 93401
+# HELP go_memstats_mcache_inuse_bytes Number of bytes in use by mcache structures. Equals to /memory/classes/metadata/mcache/inuse:bytes.
+# TYPE go_memstats_mcache_inuse_bytes gauge
+go_memstats_mcache_inuse_bytes 4800
+# HELP go_memstats_mcache_sys_bytes Number of bytes used for mcache structures obtained from system. Equals to /memory/classes/metadata/mcache/inuse:bytes + /memory/classes/metadata/mcache/free:bytes.
+# TYPE go_memstats_mcache_sys_bytes gauge
+go_memstats_mcache_sys_bytes 15600
+# HELP go_memstats_mspan_inuse_bytes Number of bytes in use by mspan structures. Equals to /memory/classes/metadata/mspan/inuse:bytes.
+# TYPE go_memstats_mspan_inuse_bytes gauge
+go_memstats_mspan_inuse_bytes 97920
+# HELP go_memstats_mspan_sys_bytes Number of bytes used for mspan structures obtained from system. Equals to /memory/classes/metadata/mspan/inuse:bytes + /memory/classes/metadata/mspan/free:bytes.
+# TYPE go_memstats_mspan_sys_bytes gauge
+go_memstats_mspan_sys_bytes 114240
+# HELP go_memstats_next_gc_bytes Number of heap bytes when next garbage collection will take place. Equals to /gc/heap/goal:bytes.
+# TYPE go_memstats_next_gc_bytes gauge
+go_memstats_next_gc_bytes 6.102544e+06
+# HELP go_memstats_other_sys_bytes Number of bytes used for other system allocations. Equals to /memory/classes/other:bytes.
+# TYPE go_memstats_other_sys_bytes gauge
+go_memstats_other_sys_bytes 976985
+# HELP go_memstats_stack_inuse_bytes Number of bytes obtained from system for stack allocator in non-CGO environments. Equals to /memory/classes/heap/stacks:bytes.
+# TYPE go_memstats_stack_inuse_bytes gauge
+go_memstats_stack_inuse_bytes 819200
+# HELP go_memstats_stack_sys_bytes Number of bytes obtained from system for stack allocator. Equals to /memory/classes/heap/stacks:bytes + /memory/classes/os-stacks:bytes.
+# TYPE go_memstats_stack_sys_bytes gauge
+go_memstats_stack_sys_bytes 819200
+# HELP go_memstats_sys_bytes Number of bytes obtained from system. Equals to /memory/classes/total:byte.
+# TYPE go_memstats_sys_bytes gauge
+go_memstats_sys_bytes 1.6473104e+07
+# HELP go_sched_gomaxprocs_threads The current runtime.GOMAXPROCS setting, or the number of operating system threads that can execute user-level Go code simultaneously. Sourced from /sched/gomaxprocs:threads
+# TYPE go_sched_gomaxprocs_threads gauge
+go_sched_gomaxprocs_threads 4
+# HELP go_threads Number of OS threads created.
+# TYPE go_threads gauge
+go_threads 10
+# HELP nginx_connections_accepted Accepted client connections
+# TYPE nginx_connections_accepted counter
+nginx_connections_accepted 1
+# HELP nginx_connections_active Active client connections
+# TYPE nginx_connections_active gauge
+nginx_connections_active 1
+# HELP nginx_connections_handled Handled client connections
+# TYPE nginx_connections_handled counter
+nginx_connections_handled 1
+# HELP nginx_connections_reading Connections where NGINX is reading the request header
+# TYPE nginx_connections_reading gauge
+nginx_connections_reading 0
+# HELP nginx_connections_waiting Idle client connections
+# TYPE nginx_connections_waiting gauge
+nginx_connections_waiting 0
+# HELP nginx_connections_writing Connections where NGINX is writing the response back to the client
+# TYPE nginx_connections_writing gauge
+nginx_connections_writing 1
+# HELP nginx_exporter_build_info A metric with a constant '1' value labeled by version, revision, branch, goversion from which nginx_exporter was built, and the goos and goarch for the build.
+# TYPE nginx_exporter_build_info gauge
+nginx_exporter_build_info{branch="HEAD",goarch="amd64",goos="linux",goversion="go1.23.3",revision="eb921f6062ff814acf8913cade92def952dfbe2e",tags="unknown",version="1.4.0"} 1
+# HELP nginx_http_requests_total Total http requests
+# TYPE nginx_http_requests_total counter
+nginx_http_requests_total 77
+# HELP nginx_up Status of the last metric scrape
+# TYPE nginx_up gauge
+nginx_up 1
+# HELP process_cpu_seconds_total Total user and system CPU time spent in seconds.
+# TYPE process_cpu_seconds_total counter
+process_cpu_seconds_total 0.56
+# HELP process_max_fds Maximum number of open file descriptors.
+# TYPE process_max_fds gauge
+process_max_fds 1.048576e+06
+# HELP process_network_receive_bytes_total Number of bytes received by the process over the network.
+# TYPE process_network_receive_bytes_total counter
+process_network_receive_bytes_total 79534
+# HELP process_network_transmit_bytes_total Number of bytes sent by the process over the network.
+# TYPE process_network_transmit_bytes_total counter
+process_network_transmit_bytes_total 245814
+# HELP process_open_fds Number of open file descriptors.
+# TYPE process_open_fds gauge
+process_open_fds 10
+# HELP process_resident_memory_bytes Resident memory size in bytes.
+# TYPE process_resident_memory_bytes gauge
+process_resident_memory_bytes 1.5552512e+07
+# HELP process_start_time_seconds Start time of the process since unix epoch in seconds.
+# TYPE process_start_time_seconds gauge
+process_start_time_seconds 1.74371303928e+09
+# HELP process_virtual_memory_bytes Virtual memory size in bytes.
+# TYPE process_virtual_memory_bytes gauge
+process_virtual_memory_bytes 1.268645888e+09
+# HELP process_virtual_memory_max_bytes Maximum amount of virtual memory available in bytes.
+# TYPE process_virtual_memory_max_bytes gauge
+process_virtual_memory_max_bytes 1.8446744073709552e+19
+# HELP promhttp_metric_handler_requests_in_flight Current number of scrapes being served.
+# TYPE promhttp_metric_handler_requests_in_flight gauge
+promhttp_metric_handler_requests_in_flight 1
+# HELP promhttp_metric_handler_requests_total Total number of scrapes by HTTP status code.
+# TYPE promhttp_metric_handler_requests_total counter
+promhttp_metric_handler_requests_total{code="200"} 76
+promhttp_metric_handler_requests_total{code="500"} 0
+promhttp_metric_handler_requests_total{code="503"} 0
