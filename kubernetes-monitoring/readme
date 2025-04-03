@@ -70,3 +70,6 @@ kube-system     prom-stack-kube-prometheus-kube-etcd                 192.168.49.
 kube-system     prom-stack-kube-prometheus-kube-proxy                192.168.49.2:10249                                        27h
 kube-system     prom-stack-kube-prometheus-kube-scheduler            192.168.49.2:10259                                        27h
 kube-system     prom-stack-kube-prometheus-kubelet                   192.168.49.2:10250,192.168.49.2:10255,192.168.49.2:4194   27h
+
+![screenshot](kubernetes-monitoring/Screenshot_3.png)
+![screenshot](kubernetes-monitoring/Screenshot_4.png)
